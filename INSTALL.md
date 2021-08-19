@@ -1,0 +1,158 @@
+# Arch Install
+
+- Encrypted
+- Works with UEFI
+
+## Install Guide
+
+1.  Create bootable USB with Arch
+    ```
+    dd if=ARCH.iso of=/dev/sdX status=progress
+    ```
+
+2.  Connect to Internet
+
+    If you are using wifi, use [iwd](https://wiki.archlinux.org/title/Iwd)
+    ```
+    device list
+    station *device* get-networks
+    station *device* connect *SSID*
+    ```
+    
+3.  Partition the disk
+    ```
+    fdisk /dev/sdX
+    ```
+    Enter:
+    ```
+    (command) o # Create an empty partition table
+
+    (command) n # Create boot
+    (command) p
+    (command) 1
+    (command) +256M
+
+    (command) n # Contains everything else
+    (command) p
+    (command) 3 # Press enter after this till complete
+
+    (command) w # Write
+    ```
+    
+4.  Format boot:
+    ```
+    mkfs.fat -F32 /dev/sdX1
+    ```
+    
+5.  Create luks:
+    ```
+    cryptsetup -c aes-xts-plain64 -y --use-random luksFormat /dev/sdX2
+    cryptsetup luksOpen /dev/sdX2 luks
+    ```
+6.  Create LVM:
+    ```
+    pvcreate /dev/mapper/luks
+    vgcreate vg0 /dev/mapper/luks
+    lvcreate --size 8G vg0 --name swap
+    lvcreate --size 80G vg0 --name root
+    lvcreate -l +100%FREE vg0 --name home
+    mkfs.ext4 /dev/mapper/vg0-root
+    mkfs.ext4 /dev/mapper/vg0-home
+    mkswap /dev/mapper/vg0-swap
+    ```
+7.  Mount:
+    ```
+    mount /dev/mapper/vg0-root /mnt
+    mkdir /mnt/home
+    mount /dev/mapper/vg0-home /mnt/home
+    mkdir /mnt/boot
+    mount /dev/sdX1 /mnt/boot
+    swapon /dev/mapper/vg0-swap
+    ```
+8.  Install:
+    ```
+    # Add iwd if you need wifi
+    pacstrap -i /mnt base base-devel linux linux-firmware git vim lvm2
+    ```
+9.  Create fstab:
+    ```
+    genfstab -pU /mnt >> /mnt/etc/fstab
+    ```
+10. Enter chroot jail of new system:
+    ```
+    arch-chroot /mnt
+    ```
+11. Set hostname:
+    ```
+    echo machine > /etc/hostname
+    ```
+12. Map localhost in `/etc/hosts`:
+    ```
+    127.0.0.1	localhost
+    ::1		localhost
+    ```
+13. Create user:
+    ```
+    useradd -m -g users -G wheel user
+    passwd user
+    visudo # Uncomment %wheel ALL=(ALL) ALL
+    passwd # Set root password
+    ```
+14. Set locale
+    ```
+    vim /etc/locale.gen # uncomment en_US.UTF-8 UTF-8
+    locale-gen
+    echo LANG=en_US.UTF-8 > /etc/locale.conf
+    export LANG=en_US.UTF-8
+    ```
+15. Set time zone:
+    ```
+    timedatectl list-timezones
+    timedatectl set-timezone Zone/SubZone
+    ```
+16. Set hardware clock from system clock
+    ```
+    hwclock --systohc
+    ```
+17. Modify `mkinitcpio`:
+    ```
+    vim /etc/mkinitcpio.conf
+    ```
+    Add `ext4` to `MODULES=()`
+
+    Add `encrypt lvm2` to `HOOKS=()` before `filesystems`
+
+    Create initial ramdisk:
+    ```
+    mkinitcpio -p linux
+    ```
+18. Create bootloader with GRUB
+    ```
+    pacman -S grub efibootmgr
+    ```
+19. Modify GRUB config in `/etc/default/grub`
+    ```
+    GRUB_CMDLINE_LINUX="cryptdevice=/dev/sdX2:luks:allow-discards root=/dev/mapper/vg0-root"
+    ```
+20. Install GRUB
+    ```
+    grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
+    mkdir /boot/EFI/BOOT
+    cp /boot/EFI/GRUB/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
+    ```
+21. Create startup file in `/boot/startup.nsh`
+    ```
+    bcf boot add 1 fs0:\EFI\GRUB\grubx64.efi "GRUB bootloader"
+    exit
+    ```
+22. Make GRUB config:
+    ```
+    grub-mkconfig -o /boot/grub/grub.cfg
+    ```
+23. Exit install
+    ```
+    exit
+    umount -R /mnt
+    swapoff -a
+    reboot # Unplug USB
+    ```
