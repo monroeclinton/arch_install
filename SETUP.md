@@ -87,3 +87,7 @@
     ```
     sudo pacman -Syu noto-fonts
     ```
+8. Enable PluseAudio
+    ```
+    systemctl --user restart pulseaudio.service
+    ```
