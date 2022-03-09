@@ -89,5 +89,6 @@
     ```
 8. Enable PluseAudio
     ```
-    systemctl --user restart pulseaudio.service
+    systemctl --user enable pulseaudio.service
+    systemctl --user start pulseaudio.service
     ```
