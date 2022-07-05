@@ -34,7 +34,7 @@
 
     (command) n # Contains everything else
     (command) p
-    (command) 3 # Press enter after this till complete
+    (command) 2 # Press enter after this till complete
 
     (command) w # Write
     ```
