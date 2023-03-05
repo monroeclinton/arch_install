@@ -76,7 +76,7 @@
 8.  Install:
     ```
     # Add iwd if you need wifi
-    pacstrap -i /mnt base base-devel linux linux-firmware git vim lvm2 grub efibootmgr
+    pacstrap -i /mnt base base-devel linux linux-firmware git vim lvm2 grub efibootmgr dhcpcd
     ```
 9.  Create fstab:
     ```
