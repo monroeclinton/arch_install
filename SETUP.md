@@ -90,6 +90,7 @@
     ```
 8. Enable PluseAudio
     ```
+    sudo pacman -Syu pulseaudio
     systemctl --user enable pulseaudio.service
     systemctl --user start pulseaudio.service
     ```
