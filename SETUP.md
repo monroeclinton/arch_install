@@ -6,11 +6,12 @@
 ## Setup Guide
 
 1.  Enable networking
-    If using `iwd`:
     ```
-    sudo systemctl enable iwd
-    sudo systemctl start iwd
+    # Add `iwd` if you need wireless
+    sudo systemctl enable dhcpcd
+    sudo systemctl start dhcpcd
     ```
+    
     Create `/etc/iwd/main.conf`
     ```
     [General]
