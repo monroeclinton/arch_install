@@ -37,7 +37,7 @@
     ```
     mkdir ~/bin
     cd ~/bin
-    git clone https://github.com/monroeclinton/dwm
+    git clone git://git.suckless.org/dwm
     cd dwm
     make
     make install
@@ -46,7 +46,7 @@
     ```
     sudo pacman -Syu xclip # Needed for copying to clipboard
     cd ~/bin
-    git clone https://github.com/monroeclinton/st
+    git clone git://git.suckless.org/st
     cd st
     make
     make install
@@ -54,7 +54,7 @@
     Install dmenu
     ```
     cd ~/bin
-    git clone https://github.com/monroeclinton/dmenu
+    git clone git://git.suckless.org/dmenu
     cd dmenu
     make
     make install
@@ -62,7 +62,7 @@
     Install dwmblocks
     ```
     cd ~/bin
-    git clone https://github.com/monroeclinton/dwmblocks
+    git clone git@github.com:torrinfail/dwmblocks.git
     cd dwmblocks
     make
     make install
@@ -70,7 +70,7 @@
     Install scroll
     ```
     cd ~/bin
-    git clone https://github.com/monroeclinton/scroll
+    git clone git://git.suckless.org/scroll
     cd scroll
     make
     make install
