@@ -9,7 +9,6 @@
     ```
     dd if=ARCH.iso of=/dev/sdX status=progress
     ```
-
 2.  Connect to Internet
 
     If you are using wifi, use [iwd](https://wiki.archlinux.org/title/Iwd)
@@ -18,8 +17,13 @@
     station *device* get-networks
     station *device* connect *SSID*
     ```
-    
 3.  Partition the disk
+    ```
+    lsblk # View a list of your block devices
+    ```
+    
+    NOTE: Virtual machines in this tutorial, use `vdX` instead of `sdX`. Replace `X` with the proper letter you get from `lsblk`
+
     ```
     fdisk /dev/sdX
     ```
@@ -30,7 +34,9 @@
     (command) n # Create boot
     (command) p
     (command) 1
-    (command) +256M
+    
+    # Press enter for first sector
+    (command) +256M # Offset for last sector
 
     (command) n # Contains everything else
     (command) p
@@ -38,18 +44,16 @@
 
     (command) w # Write
     ```
-    
 4.  Format boot:
     ```
     mkfs.fat -F32 /dev/sdX1
     ```
-    
 5.  Create luks:
     ```
     cryptsetup -c aes-xts-plain64 -y --use-random luksFormat /dev/sdX2
     cryptsetup luksOpen /dev/sdX2 luks
     ```
-6.  Create LVM:
+6.  Create LVM ([Logical Volume Management](https://wiki.archlinux.org/title/LVM)):
     ```
     pvcreate /dev/mapper/luks
     vgcreate vg0 /dev/mapper/luks
@@ -72,7 +76,7 @@
 8.  Install:
     ```
     # Add iwd if you need wifi
-    pacstrap -i /mnt base base-devel linux linux-firmware git vim lvm2
+    pacstrap -i /mnt base base-devel linux linux-firmware git vim lvm2 grub efibootmgr
     ```
 9.  Create fstab:
     ```
@@ -105,10 +109,9 @@
     echo LANG=en_US.UTF-8 > /etc/locale.conf
     export LANG=en_US.UTF-8
     ```
-15. Set time zone:
+15. Set the system time
     ```
-    timedatectl list-timezones
-    timedatectl set-timezone Zone/SubZone
+    ln -sf /usr/share/zoneinfo/Zone/SubZone /etc/localtime
     ```
 16. Set hardware clock from system clock
     ```
@@ -126,30 +129,21 @@
     ```
     mkinitcpio -p linux
     ```
-18. Create bootloader with GRUB
-    ```
-    pacman -S grub efibootmgr
-    ```
-19. Modify GRUB config in `/etc/default/grub`
+18. Modify GRUB config in `/etc/default/grub`
     ```
     GRUB_CMDLINE_LINUX="cryptdevice=/dev/sdX2:luks:allow-discards root=/dev/mapper/vg0-root"
     ```
-20. Install GRUB
+19. Install GRUB for UEFI: [Guide](https://wiki.archlinux.org/title/GRUB)
+
+    Install GRUB for legacy
     ```
-    grub-install --target=x86_64-efi --bootloader-id=GRUB --efi-directory=/boot
-    mkdir /boot/EFI/BOOT
-    cp /boot/EFI/GRUB/grubx64.efi /boot/EFI/BOOT/BOOTX64.EFI
+    grub-install /dev/sdX
     ```
-21. Create startup file in `/boot/startup.nsh`
-    ```
-    bcf boot add 1 fs0:\EFI\GRUB\grubx64.efi "GRUB bootloader"
-    exit
-    ```
-22. Make GRUB config:
+20. Make GRUB config:
     ```
     grub-mkconfig -o /boot/grub/grub.cfg
     ```
-23. Exit install
+21. Exit install
     ```
     exit
     umount -R /mnt
